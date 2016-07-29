@@ -28,9 +28,9 @@ static sf2d_texture *_sfil_load_JPEG_generic(struct jpeg_decompress_struct *jinf
 
 	unsigned int i, color, *tex_ptr;
 	unsigned char *jpeg_ptr;
-	void *row_ptr = texture->data;
+	void *row_ptr = texture->tex.data;
 
-	int stride = texture->pow2_w * 4;
+	int stride = texture->tex.width * 4;
 
 	while (jinfo->output_scanline < jinfo->output_height) {
 		jpeg_read_scanlines(jinfo, buffer, 1);

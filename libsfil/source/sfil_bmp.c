@@ -50,7 +50,7 @@ static sf2d_texture *_sfil_load_BMP_generic(
 
 	seek_fn(user_data, bmp_fh->bfOffBits);
 
-	int stride = texture->pow2_w * 4;
+	int stride = texture->tex.width * 4;
 
 	void *buffer = malloc(row_size);
 	if (!buffer) {
@@ -67,7 +67,7 @@ static sf2d_texture *_sfil_load_BMP_generic(
 		read_fn(user_data, buffer, row_size);
 
 		y = bmp_ih->biHeight - 1 - i;
-		tex_ptr = (unsigned int *)(texture->data + y*stride);
+		tex_ptr = (unsigned int *)(texture->tex.data + y*stride);
 
 		for (x = 0; x < bmp_ih->biWidth; x++) {
 

@@ -92,11 +92,11 @@ static sf2d_texture *_sfil_load_PNG_generic(const void *io_ptr, png_rw_ptr read_
 	if (!texture)
 		goto error_create_tex;
 
-	int stride = texture->pow2_w * 4;
+	int stride = texture->tex.width * 4;
 
 	int i;
 	for (i = 0; i < height; i++) {
-		row_ptrs[i] = (png_bytep)(texture->data + i*stride);
+		row_ptrs[i] = (png_bytep)(texture->tex.data + i*stride);
 	}
 
 	png_read_image(png_ptr, row_ptrs);
