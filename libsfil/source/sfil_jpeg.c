@@ -32,21 +32,21 @@ static sf2d_texture *_sfil_load_JPEG_generic(struct jpeg_decompress_struct *jinf
 	JSAMPARRAY buffer = (JSAMPARRAY)malloc(sizeof(JSAMPROW));
 	buffer[0] = (JSAMPROW)malloc(sizeof(JSAMPLE) * row_bytes);
 
-	unsigned int i, color, *tex_ptr;
-	unsigned char *jpeg_ptr;
-	void *row_ptr = texture->tex.data;
-
-	int stride = texture->tex.width * 4;
+	unsigned int i, color;
+	const unsigned char *jpeg_ptr;
+	unsigned int *row_ptr = texture->tex.data;
 
 	while (jinfo->output_scanline < jinfo->output_height) {
 		jpeg_read_scanlines(jinfo, buffer, 1);
-		tex_ptr = (row_ptr += stride);
+		unsigned int *tex_ptr = row_ptr;
 		for (i = 0, jpeg_ptr = buffer[0]; i < jinfo->output_width; i++) {
-			color = *(jpeg_ptr++);
+			color  = *(jpeg_ptr++);
 			color |= *(jpeg_ptr++)<<8;
 			color |= *(jpeg_ptr++)<<16;
 			*(tex_ptr++) = color | 0xFF000000;
 		}
+		// Next row.
+		row_ptr += texture->tex.width;
 	}
 
 	jpeg_finish_decompress(jinfo);
