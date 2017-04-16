@@ -6,16 +6,22 @@
 
 static sf2d_texture *_sfil_load_JPEG_generic(struct jpeg_decompress_struct *jinfo, struct jpeg_error_mgr *jerr, sf2d_place place)
 {
-	jpeg_start_decompress(jinfo);
-
 	int row_bytes;
-	switch (jinfo->out_color_space) {
-	case JCS_RGB:
-		row_bytes = jinfo->image_width * 3;
-		break;
-	default:
-		goto exit_error;
+	switch (jinfo->jpeg_color_space) {
+		case JCS_RGB:
+			row_bytes = jinfo->image_width * 3;
+			break;
+		case JCS_YCbCr:
+			// Need to convert this to RGB.
+			jinfo->out_color_space = JCS_RGB;
+			row_bytes = jinfo->image_width * 3;
+			break;
+		default:
+			goto exit_error;
 	}
+
+	// TODO: Support JCS_GRAYSCALE, JCS_CMYK, and JCS_YCCK?
+	jpeg_start_decompress(jinfo);
 
 	sf2d_texture *texture = sf2d_create_texture(jinfo->image_width,
 		jinfo->image_height, GPU_RGBA8, place);
