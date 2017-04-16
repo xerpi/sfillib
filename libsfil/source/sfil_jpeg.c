@@ -39,10 +39,10 @@ static sf2d_texture *_sfil_load_JPEG_generic(struct jpeg_decompress_struct *jinf
 	while (jinfo->output_scanline < jinfo->output_height) {
 		jpeg_read_scanlines(jinfo, buffer, 1);
 		unsigned int *tex_ptr = row_ptr;
-		for (i = 0, jpeg_ptr = buffer[0]; i < jinfo->output_width; i++) {
-			color  = *(jpeg_ptr++);
-			color |= *(jpeg_ptr++)<<8;
-			color |= *(jpeg_ptr++)<<16;
+		for (i = 0, jpeg_ptr = buffer[0]; i < jinfo->output_width; i++, jpeg_ptr += 3) {
+			color  = jpeg_ptr[0];
+			color |= jpeg_ptr[1] << 8;
+			color |= jpeg_ptr[2] << 16;
 			*(tex_ptr++) = color | 0xFF000000;
 		}
 		// Next row.
