@@ -6,16 +6,22 @@
 
 static sf2d_texture *_sfil_load_JPEG_generic(struct jpeg_decompress_struct *jinfo, struct jpeg_error_mgr *jerr, sf2d_place place)
 {
-	jpeg_start_decompress(jinfo);
-
 	int row_bytes;
-	switch (jinfo->out_color_space) {
-	case JCS_RGB:
-		row_bytes = jinfo->image_width * 3;
-		break;
-	default:
-		goto exit_error;
+	switch (jinfo->jpeg_color_space) {
+		case JCS_RGB:
+			row_bytes = jinfo->image_width * 3;
+			break;
+		case JCS_YCbCr:
+			// Need to convert this to RGB.
+			jinfo->out_color_space = JCS_RGB;
+			row_bytes = jinfo->image_width * 3;
+			break;
+		default:
+			goto exit_error;
 	}
+
+	// TODO: Support JCS_GRAYSCALE, JCS_CMYK, and JCS_YCCK?
+	jpeg_start_decompress(jinfo);
 
 	sf2d_texture *texture = sf2d_create_texture(jinfo->image_width,
 		jinfo->image_height, GPU_RGBA8, place);
@@ -26,21 +32,21 @@ static sf2d_texture *_sfil_load_JPEG_generic(struct jpeg_decompress_struct *jinf
 	JSAMPARRAY buffer = (JSAMPARRAY)malloc(sizeof(JSAMPROW));
 	buffer[0] = (JSAMPROW)malloc(sizeof(JSAMPLE) * row_bytes);
 
-	unsigned int i, color, *tex_ptr;
-	unsigned char *jpeg_ptr;
-	void *row_ptr = texture->tex.data;
-
-	int stride = texture->tex.width * 4;
+	unsigned int i, color;
+	const unsigned char *jpeg_ptr;
+	unsigned int *row_ptr = texture->tex.data;
 
 	while (jinfo->output_scanline < jinfo->output_height) {
 		jpeg_read_scanlines(jinfo, buffer, 1);
-		tex_ptr = (row_ptr += stride);
-		for (i = 0, jpeg_ptr = buffer[0]; i < jinfo->output_width; i++) {
-			color = *(jpeg_ptr++);
-			color |= *(jpeg_ptr++)<<8;
-			color |= *(jpeg_ptr++)<<16;
+		unsigned int *tex_ptr = row_ptr;
+		for (i = 0, jpeg_ptr = buffer[0]; i < jinfo->output_width; i++, jpeg_ptr += 3) {
+			color  = jpeg_ptr[0];
+			color |= jpeg_ptr[1] << 8;
+			color |= jpeg_ptr[2] << 16;
 			*(tex_ptr++) = color | 0xFF000000;
 		}
+		// Next row.
+		row_ptr += texture->tex.width;
 	}
 
 	jpeg_finish_decompress(jinfo);
